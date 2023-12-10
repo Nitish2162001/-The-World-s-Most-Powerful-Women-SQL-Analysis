@@ -1,0 +1,100 @@
+1)List all people from the United States ?
+
+SELECT * FROM people WHERE Location = 'United States';
+
+2) Retrieve the names and ages of people in the "Philanthropy" category ?
+
+SELECT Name, Age FROM people WHERE Category = 'Philanthropy';
+
+3) Count the number of people in each category ?
+
+SELECT Category, COUNT(*) AS Count FROM people GROUP BY Category;
+
+4) Find the average age of people in the "Business" category?
+
+SELECT AVG(Age) AS AverageAge FROM people WHERE Category = 'Business';
+
+5) Retrieve the names of people aged 60 or older ?
+
+SELECT Name FROM people WHERE Age >= 60;
+
+6) Find the person(s) with the highest age in each location?
+
+SELECT *
+FROM people p1
+WHERE Age = (SELECT MAX(Age) FROM people p2 WHERE p1.Location = p2.Location);
+
+7) List the names of people who are older than the average age ?
+
+SELECT Name, Age
+FROM people
+WHERE Age > (SELECT AVG(Age) FROM people);
+
+8) Categorize people into age groups (e.g., Young, Middle-aged, Senior) ?
+
+SELECT
+    Name,
+    Age,
+    CASE
+        WHEN Age <= 35 THEN 'Young'
+        WHEN Age <= 60 THEN 'Middle-aged'
+        ELSE 'Senior'
+    END AS AgeGroup
+FROM people;
+
+9) Assign ranks to people based on their age within each category ?
+
+SELECT
+    Name,
+    Age,
+    Location,
+    Category,
+    RANK() OVER (PARTITION BY Category ORDER BY Age DESC) AS AgeRankWithinCategory
+FROM people;
+
+10) Retrieve the next person's age and name for each person ?
+
+SELECT
+    Name,
+    Age,
+    LEAD(Name) OVER (ORDER BY Rank) AS NextPersonName,
+    LEAD(Age) OVER (ORDER BY Rank) AS NextPersonAge
+FROM people;
+
+11) What is Taylor Swift's rank, age, and category, and who is the person with the next higher rank?
+
+
+WITH TaylorSwiftInfo AS (
+    SELECT *
+    FROM people
+    WHERE Name = 'Taylor Swift'
+)
+
+SELECT
+    t.Name AS TaylorSwiftName,
+    t.Rank AS TaylorSwiftRank,
+    t.Age AS TaylorSwiftAge,
+    t.Category AS TaylorSwiftCategory,
+    p.Name AS NextPersonName,
+    p.Rank AS NextPersonRank,
+    p.Age AS NextPersonAge,
+    p.Category AS NextPersonCategory
+FROM TaylorSwiftInfo t
+JOIN people p ON t.Rank = p.Rank - 1;
+
+12) What are the individuals who share the same category as Nirmala Sitharaman, and what are their ranks and ages?
+
+WITH NirmalaSitharamanInfo AS (
+    SELECT *
+    FROM people
+    WHERE Name = 'Nirmala Sitharaman'
+)
+
+SELECT
+    n.Name AS NirmalaSitharamanName,
+    n.Category AS NirmalaSitharamanCategory,
+    p.Name AS PersonWithSameCategory,
+    p.Rank AS PersonRank,
+    p.Age AS PersonAge
+FROM NirmalaSitharamanInfo n
+JOIN people p ON n.Category = p.Category AND n.Name != p.Name;
